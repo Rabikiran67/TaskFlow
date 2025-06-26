@@ -10,7 +10,6 @@ const passport = require('passport');
 
 // @route   POST /api/users/register
 router.post('/register', async (req, res) => {
-    // Your existing register logic here...
     const { name, email, password } = req.body;
     try {
         let user = await User.findOne({ email });
@@ -25,11 +24,11 @@ router.post('/register', async (req, res) => {
 
 // @route   POST /api/users/login
 router.post('/login', async (req, res) => {
-    // Your existing login logic here...
     const { email, password } = req.body;
     try {
         const user = await User.findOne({ email });
         if (!user || user.googleId) { return res.status(400).json({ message: 'Invalid credentials or use Google login.' }); }
+        if (!user.password) { return res.status(400).json({ message: 'Please use the password reset functionality.' });}
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) { return res.status(400).json({ message: 'Invalid credentials' }); }
         const payload = { id: user.id };
@@ -44,11 +43,11 @@ router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 
 // @route   GET /api/users/auth/google/callback
 router.get(
   '/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: 'http://localhost:5173/login', session: false }),
+  passport.authenticate('google', { failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`, session: false }),
   (req, res) => {
     const payload = { id: req.user.id };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.redirect(`http://localhost:5173/auth/success?token=${token}`);
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/success?token=${token}`);
   }
 );
 
@@ -57,7 +56,6 @@ router.get('/profile', auth, async (req, res) => { res.json(req.user); });
 
 // @route   PUT /api/users/profile
 router.put('/profile', auth, async (req, res) => {
-    // Your existing update profile name logic here...
     try {
         const { name } = req.body;
         const user = await User.findById(req.user.id);
@@ -71,7 +69,6 @@ router.put('/profile', auth, async (req, res) => {
 
 // @route   PUT /api/users/password
 router.put('/password', auth, async (req, res) => {
-    // Your existing update password logic here...
     try {
         const { password } = req.body;
         const user = await User.findById(req.user.id);
@@ -85,7 +82,6 @@ router.put('/password', auth, async (req, res) => {
 
 // @route   POST /api/users/forgotpassword
 router.post('/forgotpassword', async (req, res) => {
-    // Your existing forgot password logic here...
     try {
         const user = await User.findOne({ email: req.body.email });
         if (!user) { return res.status(200).json({ message: 'Email sent' }); }
@@ -98,9 +94,7 @@ router.post('/forgotpassword', async (req, res) => {
     } catch (err) { res.status(500).send('Email could not be sent'); }
 });
 
-// --- THIS IS THE MOST LIKELY PLACE FOR THE ERROR ---
 // @route   PUT /api/users/resetpassword/:resettoken
-// Ensure the parameter is named correctly: `:resettoken`
 router.put('/resetpassword/:resettoken', async (req, res) => {
     try {
         const resetPasswordToken = crypto.createHash('sha256').update(req.params.resettoken).digest('hex');
