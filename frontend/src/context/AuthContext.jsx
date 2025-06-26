@@ -18,18 +18,22 @@ export const AuthProvider = ({ children }) => {
     setToken(response.data.token);
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-  };
-
-  // --- NEW FUNCTION ---
-  // Handles saving the token received from the OAuth callback
   const handleOAuthSuccess = (newToken) => {
     localStorage.setItem('token', newToken);
     setToken(newToken);
   };
-  // --- END NEW FUNCTION ---
+
+  // --- UPDATED LOGOUT FUNCTION ---
+  const logout = () => {
+    // 1. Clear the token from state and storage
+    localStorage.removeItem('token');
+    setToken(null);
+    
+    // 2. Force a full page reload to the login page.
+    // This clears any in-memory state and ensures all components re-evaluate the auth status.
+    window.location.href = '/login'; 
+  };
+  // --- END OF UPDATE ---
 
   return (
     <AuthContext.Provider value={{ token, login, logout, register, isAuthenticated: !!token, handleOAuthSuccess }}>
