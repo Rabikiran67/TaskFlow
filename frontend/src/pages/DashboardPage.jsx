@@ -20,7 +20,10 @@ const DashboardPage = () => {
       const response = await getTasks(query);
       setTasks(response.data);
     } catch (error) {
-      toast.error("Failed to fetch tasks.");
+      // Avoid showing an error toast if the request was cancelled by the user navigating away
+      if (error.code !== 'ERR_CANCELED') {
+        toast.error("Failed to fetch tasks.");
+      }
     }
   }, [filter, sortBy]);
 
@@ -28,20 +31,9 @@ const DashboardPage = () => {
     fetchTasks();
   }, [fetchTasks]);
 
-  const openModalForCreate = () => {
-    setEditingTask(null);
-    setIsModalOpen(true);
-  };
-
-  const openModalForEdit = (task) => {
-    setEditingTask(task);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setEditingTask(null);
-  };
+  const openModalForCreate = () => { setEditingTask(null); setIsModalOpen(true); };
+  const openModalForEdit = (task) => { setEditingTask(task); setIsModalOpen(true); };
+  const closeModal = () => { setIsModalOpen(false); setEditingTask(null); };
 
   const handleSaveTask = async (taskData) => {
     const action = editingTask ? updateTask(editingTask._id, taskData) : createTask(taskData);
@@ -96,7 +88,6 @@ const DashboardPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      {/* This header is now part of the page content */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-800">Dashboard</h1>
@@ -104,12 +95,11 @@ const DashboardPage = () => {
         </div>
         <button
           onClick={openModalForCreate}
-          className="px-5 py-2.5 font-semibold text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 transition-colors"
+          className="px-5 py-2.5 font-semibold text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
         >
           + Add New Task
         </button>
       </div>
-
       <div className="p-4 mb-6 bg-white rounded-xl shadow-sm">
         <div className="flex items-center gap-4">
           <span className="text-sm font-medium text-gray-600">Filter by:</span>
@@ -126,18 +116,11 @@ const DashboardPage = () => {
           </select>
         </div>
       </div>
-
       <motion.div layout className="space-y-4">
         <AnimatePresence>
           {tasks.length > 0 ? (
             tasks.map((task) => (
-              <TaskItem
-                key={task._id}
-                task={task}
-                onToggleComplete={handleToggleComplete}
-                onDelete={handleDeleteTask}
-                onEdit={openModalForEdit}
-              />
+              <TaskItem key={task._id} task={task} onToggleComplete={handleToggleComplete} onDelete={handleDeleteTask} onEdit={openModalForEdit} />
             ))
           ) : (
             <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-10 text-center bg-white rounded-xl shadow-sm">
@@ -146,14 +129,9 @@ const DashboardPage = () => {
           )}
         </AnimatePresence>
       </motion.div>
-
       <AnimatePresence>
         {isModalOpen && (
-          <TaskModal
-            task={editingTask}
-            onSave={handleSaveTask}
-            onClose={closeModal}
-          />
+          <TaskModal task={editingTask} onSave={handleSaveTask} onClose={closeModal} />
         )}
       </AnimatePresence>
     </div>
@@ -173,7 +151,7 @@ const TaskItem = ({ task, onToggleComplete, onDelete, onEdit }) => (
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, x: -50 }}
     transition={{ type: "spring", stiffness: 120 }}
-    className="flex items-center p-4 bg-white rounded-lg shadow-sm transition-shadow hover:shadow-md"
+    className="flex items-center p-4 bg-white rounded-lg shadow-sm hover:shadow-md"
   >
     <input
       type="checkbox"

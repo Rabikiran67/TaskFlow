@@ -1,12 +1,13 @@
 import axios from 'axios';
 
+// Dynamic API URL for deployment
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: API_URL,
 });
 
-// Request interceptor (unchanged)
+// Request Interceptor: Attaches JWT token to every request
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -15,30 +16,37 @@ api.interceptors.request.use(config => {
   return config;
 });
 
-// --- NEW: AXIOS RESPONSE INTERCEPTOR ---
-// This function runs after every response is received from the backend.
+// Response Interceptor: Handles 401 Unauthorized errors by logging the user out
 api.interceptors.response.use(
-  (response) => {
-    // If the response is successful, just return it
-    return response;
-  },
+  (response) => response,
   (error) => {
-    // If the error is a 401 Unauthorized (e.g., bad or expired token)
     if (error.response && error.response.status === 401) {
-      // Remove the bad token
       localStorage.removeItem('token');
-      // Redirect to login page
       window.location.href = '/login';
     }
-    // For all other errors, just pass them along
     return Promise.reject(error);
   }
 );
-// --- END OF NEW INTERCEPTOR ---
 
-// --- All endpoint exports remain the same ---
+
+// --- AUTHENTICATION ENDPOINTS ---
 export const register = (userData) => api.post('/users/register', userData);
 export const login = (userData) => api.post('/users/login', userData);
-// ... and so on for all your other API functions ...
+export const forgotPassword = (email) => api.post('/users/forgotpassword', { email });
+export const resetPassword = (token, password) => api.put(`/users/resetpassword/${token}`, { password });
+
+
+// --- USER PROFILE ENDPOINTS ---
+export const getProfile = () => api.get('/users/profile');
+export const updateProfile = (userData) => api.put('/users/profile', userData);
+export const updatePassword = (password) => api.put('/users/password', { password });
+
+
+// --- TASK ENDPOINTS (THE FIX IS HERE) ---
+export const getTasks = (query = '') => api.get(`/tasks${query}`);
+export const createTask = (taskData) => api.post('/tasks', taskData);
+export const updateTask = (id, taskData) => api.put(`/tasks/${id}`, taskData);
+export const deleteTask = (id) => api.delete(`/tasks/${id}`);
+
 
 export default api;
