@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { getRandomQuote } from '../utils/quotes'; // <-- IMPORT THE NEW FUNCTION
+import { getRandomQuote } from '../utils/quotes';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -10,26 +10,32 @@ const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // Now, the random quote is fetched each time the component is loaded
   const randomQuote = useMemo(() => getRandomQuote(), []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!email || !password) {
+      return toast.error("Please enter both email and password.");
+    }
     const toastId = toast.loading('Logging in...');
     try {
       await login(email, password);
       toast.success('Logged in successfully!', { id: toastId });
       navigate('/');
     } catch (error) {
-      toast.error('Login failed. Please check your credentials.', { id: toastId });
+      const errorMessage = error.response?.data?.message || 'Login failed. Please check your credentials.';
+      toast.error(errorMessage, { id: toastId });
     }
   };
+
+  const googleAuthUrl = import.meta.env.VITE_API_URL
+    ? `${import.meta.env.VITE_API_URL}/users/auth/google`
+    : 'http://localhost:5000/api/users/auth/google';
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-slate-100">
       <div className="relative flex w-full max-w-4xl m-6 overflow-hidden bg-white shadow-2xl rounded-2xl md:flex-row">
         
-        {/* Left Panel (Branded Panel) */}
         <div className="flex-col justify-between w-full p-10 text-white bg-gradient-to-br from-slate-800 to-slate-900 md:w-1/2 hidden md:flex">
           <div className="text-3xl font-bold">TaskFlow</div>
           <div className="text-lg italic">
@@ -39,7 +45,6 @@ const LoginPage = () => {
           <div className="text-sm text-slate-400">Made with ❤️ by Gipsy</div>
         </div>
 
-        {/* Right Panel (Form Panel) */}
         <div className="flex flex-col justify-center w-full p-10 md:w-1/2">
           <h2 className="mb-3 text-3xl font-bold text-gray-800">Welcome Back</h2>
           <p className="mb-6 font-light text-gray-500">Please log in to your account.</p>
@@ -64,7 +69,7 @@ const LoginPage = () => {
             <span className="mx-4 text-sm font-semibold text-gray-400">OR</span>
             <div className="flex-grow border-t border-gray-300"></div>
           </div>
-          <a href="http://localhost:5000/api/users/auth/google" className="flex items-center justify-center w-full px-4 py-2 font-semibold text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+          <a href={googleAuthUrl} className="flex items-center justify-center w-full px-4 py-2 font-semibold text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
             <img className="w-6 h-6 mr-3" src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google icon" />
             Continue with Google
           </a>

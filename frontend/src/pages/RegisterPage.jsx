@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { getRandomQuote } from '../utils/quotes'; // <-- IMPORT THE NEW FUNCTION
+import { getRandomQuote } from '../utils/quotes';
 
 const RegisterPage = () => {
   const [name, setName] = useState('');
@@ -11,7 +11,6 @@ const RegisterPage = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  // Fetch a new random quote for this page
   const randomQuote = useMemo(() => getRandomQuote(), []);
 
   const handleSubmit = async (e) => {
@@ -25,9 +24,14 @@ const RegisterPage = () => {
       toast.success('Account created successfully! Welcome!', { id: toastId });
       navigate('/');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Registration failed.', { id: toastId });
+      const errorMessage = error.response?.data?.message || 'Registration failed.';
+      toast.error(errorMessage, { id: toastId });
     }
   };
+
+  const googleAuthUrl = import.meta.env.VITE_API_URL
+    ? `${import.meta.env.VITE_API_URL}/users/auth/google`
+    : 'http://localhost:5000/api/users/auth/google';
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-slate-100">
@@ -48,7 +52,7 @@ const RegisterPage = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="text-sm font-medium text-gray-700">Full Name</label>
-              <input type="text" placeholder="e.g., Gipsy" value={name} onChange={(e) => setName(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <input type="text" placeholder="e.g., Ada Lovelace" value={name} onChange={(e) => setName(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700">Email Address</label>
@@ -67,7 +71,7 @@ const RegisterPage = () => {
             <span className="mx-4 text-sm font-semibold text-gray-400">OR</span>
             <div className="flex-grow border-t border-gray-300"></div>
           </div>
-          <a href="http://localhost:5000/api/users/auth/google" className="flex items-center justify-center w-full px-4 py-2 font-semibold text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+          <a href={googleAuthUrl} className="flex items-center justify-center w-full px-4 py-2 font-semibold text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
             <img className="w-6 h-6 mr-3" src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google icon" />
             Sign Up with Google
           </a>
