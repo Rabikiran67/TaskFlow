@@ -7,6 +7,9 @@ const auth = require('../middleware/auth');
 const sendEmail = require('../utils/sendEmail');
 const crypto = require('crypto');
 const passport = require('passport');
+const { URL } = require('url'); // Import the URL class for safe URL building
+
+const FRONTEND_BASE_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 // @route   POST /api/users/register
 router.post('/register', async (req, res) => {
@@ -28,7 +31,7 @@ router.post('/login', async (req, res) => {
     try {
         const user = await User.findOne({ email });
         if (!user || user.googleId) { return res.status(400).json({ message: 'Invalid credentials or use Google login.' }); }
-        if (!user.password) { return res.status(400).json({ message: 'Please use the password reset functionality.' });}
+        if (!user.password) { return res.status(400).json({ message: 'Account was created with a social provider.' });}
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) { return res.status(400).json({ message: 'Invalid credentials' }); }
         const payload = { id: user.id };
@@ -43,11 +46,19 @@ router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 
 // @route   GET /api/users/auth/google/callback
 router.get(
   '/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`, session: false }),
+  passport.authenticate('google', { 
+    failureRedirect: new URL('/login', FRONTEND_BASE_URL).toString(), 
+    session: false 
+  }),
   (req, res) => {
     const payload = { id: req.user.id };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/success?token=${token}`);
+    
+    // Safely construct the redirect URL
+    const redirectUrl = new URL('/auth/success', FRONTEND_BASE_URL);
+    redirectUrl.searchParams.set('token', token);
+    
+    res.redirect(redirectUrl.toString());
   }
 );
 
@@ -84,13 +95,16 @@ router.put('/password', auth, async (req, res) => {
 router.post('/forgotpassword', async (req, res) => {
     try {
         const user = await User.findOne({ email: req.body.email });
-        if (!user) { return res.status(200).json({ message: 'Email sent' }); }
+        if (!user) { return res.status(200).json({ message: 'If an account with that email exists, an email has been sent.' }); }
         const resetToken = user.getResetPasswordToken();
         await user.save({ validateBeforeSave: false });
-        const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/resetpassword/${resetToken}`;
-        const message = `Click this link to reset your password: \n\n ${resetUrl}`;
+        
+        // Safely construct the reset URL
+        const resetUrl = new URL(`/resetpassword/${resetToken}`, FRONTEND_BASE_URL).toString();
+        const message = `You requested a password reset. Please click this link to reset your password: \n\n ${resetUrl}`;
+        
         await sendEmail({ email: user.email, subject: 'Password Reset Request', message });
-        res.status(200).json({ message: 'Email sent' });
+        res.status(200).json({ message: 'If an account with that email exists, an email has been sent.' });
     } catch (err) { res.status(500).send('Email could not be sent'); }
 });
 
