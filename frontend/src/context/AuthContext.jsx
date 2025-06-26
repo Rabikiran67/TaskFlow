@@ -6,50 +6,35 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('token'));
 
-  // --- MODIFIED LOGIN FUNCTION ---
+  // The login function's only job is to get a token and set it.
   const login = async (email, password) => {
-    try {
-      const response = await loginService({ email, password });
-      const newToken = response.data.token;
-      if (newToken) {
-        localStorage.setItem('token', newToken);
-        setToken(newToken);
-        return true; // Return true on success
-      }
-      return false; // Return false if no token is received
-    } catch (error) {
-      // Re-throw the error so the component can catch it and show a toast
-      throw error; 
-    }
+    const response = await loginService({ email, password });
+    const newToken = response.data.token;
+    localStorage.setItem('token', newToken);
+    setToken(newToken);
   };
-  // --- END OF MODIFICATION ---
 
-  // Register function can be similarly updated for consistency
+  // The register function does the same.
   const register = async (name, email, password) => {
-    try {
-      const response = await registerService({ name, email, password });
-      const newToken = response.data.token;
-      if (newToken) {
-        localStorage.setItem('token', newToken);
-        setToken(newToken);
-        return true;
-      }
-      return false;
-    } catch (error) {
-      throw error;
-    }
+    const response = await registerService({ name, email, password });
+    const newToken = response.data.token;
+    localStorage.setItem('token', newToken);
+    setToken(newToken);
   };
 
+  // The handleOAuthSuccess function's only job is to set the token.
   const handleOAuthSuccess = (newToken) => {
     localStorage.setItem('token', newToken);
     setToken(newToken);
   };
   
+  // The logout function's only job is to clear the token.
   const logout = () => {
     localStorage.removeItem('token');
     setToken(null);
   };
 
+  // We pass `isAuthenticated` directly, derived from the token state.
   return (
     <AuthContext.Provider value={{ token, login, logout, register, isAuthenticated: !!token, handleOAuthSuccess }}>
       {children}

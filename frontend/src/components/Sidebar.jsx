@@ -1,26 +1,20 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom'; // useNavigate is already imported
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { LayoutDashboard, User, LogOut, X } from 'lucide-react';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const { logout } = useAuth();
-  const navigate = useNavigate(); // We already have this hook available
+  const navigate = useNavigate();
 
-  // --- UPDATED LOGOUT HANDLER ---
   const handleLogout = () => {
-    // 1. Call the context function to clear the auth state.
-    logout();
-    
-    // 2. Show a success message.
-    toast.success("You've been logged out.");
-    
-    // 3. Use React Router's navigate function to redirect to the login page.
-    // This is the correct way to navigate within a SPA.
-    navigate('/login');
+    toast.success("You have been logged out.");
+    logout(); // 1. Clear the auth state
+    navigate('/login'); // 2. Navigate to the login page
   };
-  // --- END OF UPDATE ---
+
+  const closeSidebar = () => setSidebarOpen(false);
 
   const navLinkClasses = ({ isActive }) =>
     `flex items-center px-4 py-3 text-gray-300 rounded-lg hover:bg-slate-700 hover:text-white transition-colors ${
@@ -29,13 +23,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
   return (
     <>
-      {/* Mobile-only overlay */}
       <div 
         className={`fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden transition-opacity ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-        onClick={() => setSidebarOpen(false)}
+        onClick={closeSidebar}
       ></div>
-
-      {/* The Sidebar itself */}
       <aside
         className={`w-72 flex-shrink-0 h-screen bg-slate-800 text-white flex flex-col p-4 fixed top-0 left-0 z-50 
                    transition-transform transform md:translate-x-0 
@@ -43,30 +34,15 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       >
         <div className="flex items-center justify-between py-4 border-b border-slate-700">
           <div className="text-2xl font-bold text-center">TaskFlow</div>
-          <button onClick={() => setSidebarOpen(false)} className="p-2 text-slate-400 md:hidden">
-            <X size={24} />
-          </button>
+          <button onClick={closeSidebar} className="p-2 text-slate-400 md:hidden"><X size={24} /></button>
         </div>
-
         <nav className="flex-grow mt-6 space-y-2">
-          <NavLink to="/" className={navLinkClasses} onClick={() => setSidebarOpen(false)}>
-            <LayoutDashboard />
-            <span className="ml-3">Dashboard</span>
-          </NavLink>
-          <NavLink to="/profile" className={navLinkClasses} onClick={() => setSidebarOpen(false)}>
-            <User />
-            <span className="ml-3">Profile</span>
-          </NavLink>
+          <NavLink to="/" className={navLinkClasses} onClick={closeSidebar}><LayoutDashboard /><span className="ml-3">Dashboard</span></NavLink>
+          <NavLink to="/profile" className={navLinkClasses} onClick={closeSidebar}><User /><span className="ml-3">Profile</span></NavLink>
         </nav>
-
         <div className="mt-auto">
-          {/* This button now calls the updated handleLogout function */}
-          <button
-            onClick={handleLogout}
-            className="flex items-center w-full px-4 py-3 text-gray-300 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
-          >
-            <LogOut />
-            <span className="ml-3">Logout</span>
+          <button onClick={handleLogout} className="flex items-center w-full px-4 py-3 text-gray-300 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
+            <LogOut /><span className="ml-3">Logout</span>
           </button>
         </div>
       </aside>

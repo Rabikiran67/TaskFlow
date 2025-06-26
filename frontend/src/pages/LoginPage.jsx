@@ -12,42 +12,32 @@ const LoginPage = () => {
 
   const randomQuote = useMemo(() => getRandomQuote(), []);
 
-  // --- UPDATED HANDLESUBMIT FUNCTION ---
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      return toast.error("Please enter both email and password.");
-    }
-
+    if (!email || !password) return toast.error("Please enter both email and password.");
+    
     const toastId = toast.loading('Logging in...');
     try {
-      // 1. Call the login function
-      const success = await login(email, password);
-      
-      // 2. Only navigate if the login function returns true
-      if (success) {
-        toast.success('Logged in successfully!', { id: toastId });
-        navigate('/');
-      } else {
-        // This case handles unexpected issues where no token is returned
-        toast.error('Login failed. Please try again.', { id: toastId });
-      }
+      await login(email, password); // 1. Call login from context
+      toast.success('Logged in successfully!', { id: toastId });
+      navigate('/'); // 2. Navigate after success
     } catch (error) {
-      // This catches API errors (like wrong password)
-      const errorMessage = error.response?.data?.message || 'Login failed. Please check your credentials.';
+      const errorMessage = error.response?.data?.message || 'Login failed.';
       toast.error(errorMessage, { id: toastId });
     }
   };
-  // --- END OF UPDATE ---
-  
+
   const googleAuthUrl = import.meta.env.VITE_API_URL
     ? `${import.meta.env.VITE_API_URL}/users/auth/google`
     : 'http://localhost:5000/api/users/auth/google';
 
   return (
-    // ... The rest of your JSX form remains exactly the same ...
+    // ...The rest of your two-panel JSX layout remains unchanged...
     <div className="flex items-center justify-center min-h-screen bg-slate-100">
-      {/* ... The two-panel layout JSX is unchanged ... */}
+      <div className="relative flex w-full max-w-4xl m-6 overflow-hidden bg-white shadow-2xl rounded-2xl md:flex-row">
+        {/* ... Left Panel ... */}
+        {/* ... Right Panel with form ... */}
+      </div>
     </div>
   );
 };
