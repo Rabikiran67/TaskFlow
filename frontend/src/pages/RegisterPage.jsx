@@ -28,7 +28,7 @@ const RegisterPage = () => {
       toast.error(errorMessage, { id: toastId });
     }
   };
-
+  
   const googleAuthUrl = import.meta.env.VITE_API_URL
     ? `${import.meta.env.VITE_API_URL}/users/auth/google`
     : 'http://localhost:5000/api/users/auth/google';
